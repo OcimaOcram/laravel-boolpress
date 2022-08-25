@@ -1,51 +1,72 @@
-@extends('layouts.app')
+@extends('admin.layouts.base')
 
-@section('content')
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header d-flex">Posts List
-                    <a class="ms-auto" href="{{route('admin.posts.create')}}">New post</a>
-                </div>
-                
+@section('mainContent')
+    @if (session('deleted'))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            {!! session('deleted') !!}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+    @endif
+    <h1>Posts</h1>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Slug</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Birth</th>
+                <th>Category</th>
+                <th>Tags</th>
+                <th class="actions">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach ($posts as $post)
+                <tr data-id="{{ $post->slug }}">
+                    <td>{{ $post->id }}</td>
+                    <td>{{ $post->slug }}</td>
+                    <td>{{ $post->title }}</td>
+                    <td>{{ $post->user->name }}</td>
+                    <td>{{ $post->user->userDetails->birth }}</td>
+                    <td>
+                        <a href="{{ route('admin.categories.show', ['category' => $post->category]) }}">
+                        {{ $post->category->name }}
+                        </a>
+                    </td>
 
-                <div class="card-body">
-                    <ul class="list-group">
-                        @foreach ($postsList as $post)
-                            <li class="list-group-item">
-                                <h4>{{$post->title}}</h4>
-                                <div>Author: {{$post->user->name}}</div>
-                                <div>Creation date: {{$post->printCreateAt()}}</div>
-                                <div>Last edit: {{$post->printUpdateAt()}}</div>
+                    {{-- <td>{{ $post->tags->pluck('name')->join(', ', ' and ') }}</td> --}}
 
-                                @if ($post->category !== null)
-                                <div>Category: <i>{{$post->category->genre}}</i></div>
-                                @endif
-
-                                Tag:
-                                @forelse ($post->tags as $tag )
-                                <span class="badge bg-dark"> <i> -{{$tag->name}}- </i> </span>
-                                @empty
-                                <span><i> undefined </i></span>
-                                @endforelse
-
-                                
-                            </li>
-                            
-
-                        
-                            <div>
-                            <a href="{{ route('admin.posts.show', $post->slug) }}" class="btn btn-secondary">Show Post</a>
-                            <a href="{{ route('admin.posts.edit', $post->slug) }}" class="btn btn-info">Edit Post</a>
-                            </div>
+                    <td>
+                        @foreach($post->tags as $tag)
+                            <a href="{{ route('admin.tags.show', ['tag' => $tag]) }}">{{ $tag->name }}</a>
+                            @if(!$loop->last) , @endif
                         @endforeach
-                        
-                    </ul>
-                    
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+                    </td>
+
+                    <td class="actions">
+                        <a href="{{ route('admin.posts.show', ['post' => $post]) }}" class="btn btn-primary">View</a>
+
+                        @if(Auth::id() == $post->user_id)
+                            <a href="{{ route('admin.posts.edit', ['post' => $post]) }}" class="btn btn-warning">Edit</a>
+                            <button class="btn btn-danger js-delete">Delete</button>
+                        @endif
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+
+    {{ $posts->links() }}
+
+    <section class="overlay d-none">
+        <form class="popup" data-action="{{ route('admin.posts.destroy', ['post' => '*****']) }}" method="post">
+            @csrf
+            @method('DELETE')
+
+            <h1>Sei sicuro?</h1>
+            <button type="submit" class="btn btn-warning js-yes">Yes</button>
+            <button type="button" class="btn btn-danger js-no">No</button>
+        </form>
+    </section>
 @endsection

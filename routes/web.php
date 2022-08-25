@@ -14,20 +14,29 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('home');
-});
+// Route::get('/', function () {
+//     return view('guests.home');
+// })->name('home');
 
 Auth::routes();
 
-Route::middleware('auth')
-    ->namespace('Admin')->prefix('admin')->name('admin.')
-    ->group( function(){
-        Route::get('/', 'HomeController@index')->name('home');
-        Route::resource('posts', 'PostController');
-    });
+// Route::get('/admin', 'HomeController@index')->name('admin');
+// Route::resource('posts', 'Admin\PostController');
 
+Route::middleware('auth')
+   ->namespace('Admin')
+   ->name('admin.')
+   ->prefix('admin')
+   ->group(function () {
+        Route::get('/', 'AdminController@dashboard')->name('dashboard');
+        Route::get('users', 'UserController@index')->name('users.index');
+        Route::resource('categories', 'CategoryController');
+        Route::resource('posts', 'PostController');
+        Route::get('getslug', 'PostController@getSlug')->name('posts.getSlug');
+        Route::get('my-posts', 'PostController@myIndex')->name('posts.myIndex');
+        Route::resource('tags', 'TagController');
+   });
 
 Route::get("{any?}", function() {
-    return view("/home");
-})->where("any", ".*");
+    return view("guests.home");
+})->where("any", ".*")->name('home');
